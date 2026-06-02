@@ -85,6 +85,7 @@ public class VideoService {
         video.setLikes(collectedVideo.getLikes());
         video.setComments(collectedVideo.getComments());
         video.setTagsJson(toJson(collectedVideo.getTags()));
+        video.setSourceKeyword(collectedVideo.getSourceKeyword());
         video.setUpdatedAt(now);
 
         return videoRepository.save(video);

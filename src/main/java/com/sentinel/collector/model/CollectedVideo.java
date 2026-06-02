@@ -2,12 +2,14 @@ package com.sentinel.collector.model;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import java.util.List;
 
 import java.time.Instant;
 
 @Getter
 @Builder
+@Setter
 public class CollectedVideo {
 
     private String platform;
@@ -33,4 +35,6 @@ public class CollectedVideo {
     private Long comments;
 
     private List<String> tags;
+
+    private String sourceKeyword;
 }
