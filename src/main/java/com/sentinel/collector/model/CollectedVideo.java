@@ -2,6 +2,7 @@ package com.sentinel.collector.model;
 
 import lombok.Builder;
 import lombok.Getter;
+import java.util.List;
 
 import java.time.Instant;
 
@@ -30,4 +31,6 @@ public class CollectedVideo {
     private Long likes;
 
     private Long comments;
+
+    private List<String> tags;
 }

@@ -12,6 +12,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -62,6 +64,10 @@ public class VideoEntity {
     private Long saves;
 
     private String hashtags;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "tags_json", columnDefinition = "jsonb")
+    private String tagsJson;
 
     @Column(name = "source_keyword")
     private String sourceKeyword;
