@@ -1,6 +1,7 @@
 package com.sentinel.account;
 
 import com.sentinel.account.dto.CreateAccountRequest;
+import com.sentinel.collector.model.CollectedAccount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -55,5 +56,31 @@ public class AccountService {
                 request.getPlatform(),
                 request.getHandle()
         );
+    }
+
+    public AccountEntity createOrUpdate(CollectedAccount collectedAccount) {
+        Instant now = Instant.now();
+
+        AccountEntity account = accountRepository
+                .findByPlatformAndExternalAccountId(
+                        collectedAccount.getPlatform(),
+                        collectedAccount.getExternalAccountId()
+                )
+                .orElseGet(() -> AccountEntity.builder()
+                        .id(UUID.randomUUID())
+                        .platform(collectedAccount.getPlatform())
+                        .externalAccountId(collectedAccount.getExternalAccountId())
+                        .handle(collectedAccount.getHandle())
+                        .createdAt(now)
+                        .active(true)
+                        .build());
+
+        account.setHandle(collectedAccount.getHandle());
+        account.setDisplayName(collectedAccount.getDisplayName());
+        account.setProfileUrl(collectedAccount.getProfileUrl());
+        account.setFollowers(collectedAccount.getFollowers());
+        account.setUpdatedAt(now);
+
+        return accountRepository.save(account);
     }
 }

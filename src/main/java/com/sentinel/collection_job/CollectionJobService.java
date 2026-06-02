@@ -6,6 +6,7 @@ import com.sentinel.collector.CollectionConfig;
 import com.sentinel.collector.CollectionResult;
 import com.sentinel.collector.CollectorRegistry;
 import com.sentinel.collector.ContentCollector;
+import com.sentinel.collector.CollectionPersistenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +20,10 @@ public class CollectionJobService {
 
     private final CollectionJobRepository collectionJobRepository;
     private final CollectorRegistry collectorRegistry;
+    private final CollectionPersistenceService collectionPersistenceService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+        .findAndRegisterModules();
 
     public List<CollectionJobEntity> findAll() {
         return collectionJobRepository.findAll();
@@ -42,6 +45,8 @@ public class CollectionJobService {
             ContentCollector collector = collectorRegistry.getCollector(platform);
 
             CollectionResult result = collector.collect(config);
+
+            collectionPersistenceService.persist(result);
 
             return markCompleted(job, result);
         } catch (Exception error) {
@@ -112,7 +117,10 @@ public class CollectionJobService {
         try {
             return objectMapper.writeValueAsString(result);
         } catch (JsonProcessingException error) {
-            throw new IllegalArgumentException("Failed to serialize collection result", error);
+            throw new IllegalArgumentException(
+                "Failed to serialize collection result: " + error.getOriginalMessage(),
+                error
+            );
         }
     }
 }

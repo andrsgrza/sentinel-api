@@ -2,6 +2,7 @@ package com.sentinel.video;
 
 import com.sentinel.video.dto.CreateVideoRequest;
 import com.sentinel.video.dto.VideoResponse;
+import com.sentinel.collector.model.CollectedVideo;
 
 public class VideoMapper {
 
@@ -24,6 +25,21 @@ public class VideoMapper {
                 .saves(request.getSaves())
                 .hashtags(request.getHashtags())
                 .sourceKeyword(request.getSourceKeyword())
+                .build();
+    }
+
+    public static VideoEntity toEntity(CollectedVideo video) {
+        return VideoEntity.builder()
+                .platform(video.getPlatform())
+                .externalVideoId(video.getExternalVideoId())
+                .url(video.getUrl())
+                .title(video.getTitle())
+                .description(video.getDescription())
+                .publishedAt(video.getPublishedAt())
+                .durationSeconds(video.getDurationSeconds())
+                .views(video.getViews())
+                .likes(video.getLikes())
+                .comments(video.getComments())
                 .build();
     }
 
