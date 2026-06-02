@@ -1,6 +1,8 @@
 package com.sentinel.collection_job;
 
-import com.sentinel.collector.CollectionRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sentinel.collector.CollectionConfig;
 import com.sentinel.collector.CollectionResult;
 import com.sentinel.collector.CollectorRegistry;
 import com.sentinel.collector.ContentCollector;
@@ -18,40 +20,45 @@ public class CollectionJobService {
     private final CollectionJobRepository collectionJobRepository;
     private final CollectorRegistry collectorRegistry;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     public List<CollectionJobEntity> findAll() {
         return collectionJobRepository.findAll();
     }
 
     public CollectionJobEntity runJob(String platform, String keyword, Integer maxResults) {
-        CollectionJobEntity job = createPendingJob(platform, keyword, maxResults);
+        CollectionConfig config = CollectionConfig.builder()
+                .platform(platform)
+                .keyword(keyword)
+                .maxResults(maxResults)
+                .deduplicate(true)
+                .build();
+
+        CollectionJobEntity job = createPendingJob(config);
 
         try {
             job = markRunning(job);
 
             ContentCollector collector = collectorRegistry.getCollector(platform);
 
-            CollectionResult result = collector.collect(
-                    CollectionRequest.builder()
-                            .keyword(keyword)
-                            .maxResults(maxResults)
-                            .build()
-            );
+            CollectionResult result = collector.collect(config);
 
-            return markCompleted(job, result.getItemsFound());
+            return markCompleted(job, result);
         } catch (Exception error) {
             return markFailed(job, error.getMessage());
         }
     }
 
-    private CollectionJobEntity createPendingJob(String platform, String keyword, Integer maxResults) {
+    private CollectionJobEntity createPendingJob(CollectionConfig config) {
         Instant now = Instant.now();
 
         CollectionJobEntity job = CollectionJobEntity.builder()
                 .id(UUID.randomUUID())
-                .platform(platform)
-                .keyword(keyword)
+                .platform(config.getPlatform())
+                .keyword(config.getKeyword())
                 .status(CollectionJobStatus.PENDING)
-                .maxResults(maxResults)
+                .maxResults(config.getMaxResults())
+                .configJson(toJson(config))
                 .itemsFound(0)
                 .createdAt(now)
                 .updatedAt(now)
@@ -70,11 +77,12 @@ public class CollectionJobService {
         return collectionJobRepository.save(job);
     }
 
-    private CollectionJobEntity markCompleted(CollectionJobEntity job, Integer itemsFound) {
+    private CollectionJobEntity markCompleted(CollectionJobEntity job, CollectionResult result) {
         Instant now = Instant.now();
 
         job.setStatus(CollectionJobStatus.COMPLETED);
-        job.setItemsFound(itemsFound);
+        job.setItemsFound(result.getItemsFound());
+        job.setResultJson(toJson(result));
         job.setFinishedAt(now);
         job.setUpdatedAt(now);
 
@@ -90,5 +98,21 @@ public class CollectionJobService {
         job.setUpdatedAt(now);
 
         return collectionJobRepository.save(job);
+    }
+
+    private String toJson(CollectionConfig config) {
+        try {
+            return objectMapper.writeValueAsString(config);
+        } catch (JsonProcessingException error) {
+            throw new IllegalArgumentException("Failed to serialize collection config", error);
+        }
+    }
+
+    private String toJson(CollectionResult result) {
+        try {
+            return objectMapper.writeValueAsString(result);
+        } catch (JsonProcessingException error) {
+            throw new IllegalArgumentException("Failed to serialize collection result", error);
+        }
     }
 }

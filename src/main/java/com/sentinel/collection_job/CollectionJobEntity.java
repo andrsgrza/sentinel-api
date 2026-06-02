@@ -11,6 +11,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -57,4 +59,12 @@ public class CollectionJobEntity {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "config_json", columnDefinition = "jsonb")
+    private String configJson;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "result_json", columnDefinition = "jsonb")
+    private String resultJson;
 }
