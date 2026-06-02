@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sentinel
+    username: sentinel_user
+    password: sentinel_password
+
+  jpa:
+    show-sql: true
+
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
