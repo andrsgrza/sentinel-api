@@ -57,6 +57,7 @@ public class YoutubeCollector implements ContentCollector {
         List<CollectedVideo> videos = videoResponse.getItems()
                 .stream()
                 .map(youtubeMapper::toCollectedVideo)
+                .peek(video -> video.setSourceKeyword(config.getKeyword()))
                 .toList();
 
         List<CollectedAccount> accounts = channelResponse.getItems()
