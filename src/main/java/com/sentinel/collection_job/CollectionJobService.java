@@ -1,5 +1,9 @@
 package com.sentinel.collection_job;
 
+import com.sentinel.collector.CollectionRequest;
+import com.sentinel.collector.CollectionResult;
+import com.sentinel.collector.CollectorRegistry;
+import com.sentinel.collector.ContentCollector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,12 +16,34 @@ import java.util.UUID;
 public class CollectionJobService {
 
     private final CollectionJobRepository collectionJobRepository;
+    private final CollectorRegistry collectorRegistry;
 
     public List<CollectionJobEntity> findAll() {
         return collectionJobRepository.findAll();
     }
 
-    public CollectionJobEntity createPendingJob(String platform, String keyword, Integer maxResults) {
+    public CollectionJobEntity runJob(String platform, String keyword, Integer maxResults) {
+        CollectionJobEntity job = createPendingJob(platform, keyword, maxResults);
+
+        try {
+            job = markRunning(job);
+
+            ContentCollector collector = collectorRegistry.getCollector(platform);
+
+            CollectionResult result = collector.collect(
+                    CollectionRequest.builder()
+                            .keyword(keyword)
+                            .maxResults(maxResults)
+                            .build()
+            );
+
+            return markCompleted(job, result.getItemsFound());
+        } catch (Exception error) {
+            return markFailed(job, error.getMessage());
+        }
+    }
+
+    private CollectionJobEntity createPendingJob(String platform, String keyword, Integer maxResults) {
         Instant now = Instant.now();
 
         CollectionJobEntity job = CollectionJobEntity.builder()
@@ -34,7 +60,7 @@ public class CollectionJobService {
         return collectionJobRepository.save(job);
     }
 
-    public CollectionJobEntity markRunning(CollectionJobEntity job) {
+    private CollectionJobEntity markRunning(CollectionJobEntity job) {
         Instant now = Instant.now();
 
         job.setStatus(CollectionJobStatus.RUNNING);
@@ -44,7 +70,7 @@ public class CollectionJobService {
         return collectionJobRepository.save(job);
     }
 
-    public CollectionJobEntity markCompleted(CollectionJobEntity job, Integer itemsFound) {
+    private CollectionJobEntity markCompleted(CollectionJobEntity job, Integer itemsFound) {
         Instant now = Instant.now();
 
         job.setStatus(CollectionJobStatus.COMPLETED);
@@ -55,7 +81,7 @@ public class CollectionJobService {
         return collectionJobRepository.save(job);
     }
 
-    public CollectionJobEntity markFailed(CollectionJobEntity job, String errorMessage) {
+    private CollectionJobEntity markFailed(CollectionJobEntity job, String errorMessage) {
         Instant now = Instant.now();
 
         job.setStatus(CollectionJobStatus.FAILED);

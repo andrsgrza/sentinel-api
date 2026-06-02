@@ -24,10 +24,10 @@ public class CollectionJobController {
 
     @PostMapping
     public CollectionJobResponse create(@RequestBody CreateCollectionJobRequest request) {
-        CollectionJobEntity job = collectionJobService.createPendingJob(
-                request.getPlatform(),
-                request.getKeyword(),
-                request.getMaxResults()
+        CollectionJobEntity job = collectionJobService.runJob(
+            request.getPlatform(),
+            request.getKeyword(),
+            request.getMaxResults()
         );
 
         return CollectionJobMapper.toResponse(job);
