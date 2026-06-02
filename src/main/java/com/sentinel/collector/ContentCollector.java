@@ -4,5 +4,5 @@ public interface ContentCollector {
 
     String getPlatform();
 
-    CollectionResult collect(CollectionRequest request);
+    CollectionResult collect(CollectionConfig config);
 }

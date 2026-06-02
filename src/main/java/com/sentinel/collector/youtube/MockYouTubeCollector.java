@@ -1,6 +1,6 @@
 package com.sentinel.collector.youtube;
 
-import com.sentinel.collector.CollectionRequest;
+import com.sentinel.collector.CollectionConfig;
 import com.sentinel.collector.CollectionResult;
 import com.sentinel.collector.ContentCollector;
 import org.springframework.stereotype.Component;
@@ -16,10 +16,9 @@ public class MockYouTubeCollector implements ContentCollector {
     }
 
     @Override
-    public CollectionResult collect(CollectionRequest request) {
-
+    public CollectionResult collect(CollectionConfig config) {
         return CollectionResult.builder()
-                .itemsFound(request.getMaxResults())
+                .itemsFound(config.getMaxResults())
                 .accounts(List.of())
                 .videos(List.of())
                 .build();
