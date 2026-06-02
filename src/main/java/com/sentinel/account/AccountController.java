@@ -24,7 +24,7 @@ public class AccountController {
 
     @PostMapping
     public AccountResponse create(@RequestBody CreateAccountRequest request) {
-        AccountEntity account = accountService.create(request);
+        AccountEntity account = accountService.createOrUpdate(request);
         return AccountMapper.toResponse(account);
     }
 }

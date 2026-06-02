@@ -18,16 +18,42 @@ public class AccountService {
         return accountRepository.findAll();
     }
 
-    public AccountEntity create(CreateAccountRequest request) {
+    public AccountEntity createOrUpdate(CreateAccountRequest request) {
         Instant now = Instant.now();
 
-        AccountEntity account = AccountMapper.toEntity(request);
+        AccountEntity account = findExistingAccount(request)
+                .orElseGet(() -> AccountEntity.builder()
+                        .id(UUID.randomUUID())
+                        .platform(request.getPlatform())
+                        .externalAccountId(request.getExternalAccountId())
+                        .handle(request.getHandle())
+                        .createdAt(now)
+                        .active(true)
+                        .build());
 
-        account.setId(UUID.randomUUID());
-        account.setActive(true);
-        account.setCreatedAt(now);
+        account.setDisplayName(request.getDisplayName());
+        account.setProfileUrl(request.getProfileUrl());
+        account.setNiche(request.getNiche());
+        account.setSubniche(request.getSubniche());
+        account.setFollowers(request.getFollowers());
+        account.setAvgViews(request.getAvgViews());
+        account.setLanguage(request.getLanguage());
         account.setUpdatedAt(now);
 
         return accountRepository.save(account);
+    }
+
+    private java.util.Optional<AccountEntity> findExistingAccount(CreateAccountRequest request) {
+        if (request.getExternalAccountId() != null && !request.getExternalAccountId().isBlank()) {
+            return accountRepository.findByPlatformAndExternalAccountId(
+                    request.getPlatform(),
+                    request.getExternalAccountId()
+            );
+        }
+
+        return accountRepository.findByPlatformAndHandle(
+                request.getPlatform(),
+                request.getHandle()
+        );
     }
 }
